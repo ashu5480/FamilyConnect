@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { apiRequest } from '../../services/api';
 import { Motion, MotionGroup } from '../../components/animations';
-import { AnimatedButton, AnimatedCard } from '../../components/animations/AnimatedComponents';
+import { Button } from '../../components/ui/Button';
+import { EmptyState, Skeleton, Gutter } from '../../components/ui/states';
+import { colors, typography, spacing, borderRadius, animation } from '../../constants/theme';
 
 interface EventData {
   id: string;
@@ -18,58 +20,77 @@ interface EventData {
 export default function EventsScreen() {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    setLoadError('');
     try {
       const data = await apiRequest<any>('/events');
       setEvents(data.events || []);
-    } catch (error) {
-      console.error('Failed to load events:', error);
+    } catch (error: any) {
+      setLoadError(error.message || 'Could not load events. Pull to retry.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#E91E63" />
+      <View style={styles.root}>
+        <Gutter style={styles.content}>
+          <Skeleton height={54} style={{ marginTop: 60 }} />
+          <Skeleton height={120} style={{ marginTop: 16 }} />
+          <Skeleton height={120} style={{ marginTop: 12 }} />
+        </Gutter>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Motion preset="fadeInDown" duration={600}>
-        <AnimatedButton
-          title="+ Create New Event"
-          onPress={() => router.push('/event/create' as any)}
-          variant="primary"
-          size="large"
-          animation="spring"
-        />
-      </Motion>
-
-      {events.length === 0 ? (
-        <Motion preset="zoomIn" delay={200} duration={600}>
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📅</Text>
-            <Text style={styles.emptyTitle}>No Events Yet</Text>
-            <Text style={styles.emptyText}>Create your first family event to get started.</Text>
-          </View>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadEvents(true); }} />}
+    >
+      <Gutter style={styles.content}>
+        <Motion preset="fadeInDown" duration={animation.duration.fast}>
+          <Text style={styles.title}>Events</Text>
+          <Text style={styles.subtitle}>
+            {events.length === 0 ? 'Plan your first celebration' : `${events.length} upcoming celebration${events.length === 1 ? '' : 's'}`}
+          </Text>
+          {loadError ? (
+            <View style={styles.loadError} accessibilityRole="alert">
+              <Text style={styles.loadErrorText}>{loadError}</Text>
+            </View>
+          ) : null}
+          <Button title="Create New Event" onPress={() => router.push('/event/create' as any)} hint="Create a new family event" />
         </Motion>
-      ) : (
-        <MotionGroup preset="fadeInUp" stagger={100} duration={500} delay={100}>
-          {events.map(event => (
-            <EventCard key={event.id} event={event} onPress={() => router.push(`/event/${event.id}` as any)} />
-          ))}
-        </MotionGroup>
-      )}
+
+        {events.length === 0 ? (
+          <Motion preset="fadeInUp" delay={200} duration={animation.duration.normal}>
+            <EmptyState
+              title="No events yet"
+              body="Create your first family event — a wedding, birthday, or reunion."
+              actionLabel="Create Event"
+              onAction={() => router.push('/event/create' as any)}
+            />
+          </Motion>
+        ) : (
+          <MotionGroup preset="fadeInUp" stagger={animation.stagger.fast} duration={animation.duration.fast} delay={100}>
+            {events.map(event => (
+              <EventCard key={event.id} event={event} onPress={() => router.push(`/event/${event.id}` as any)} />
+            ))}
+          </MotionGroup>
+        )}
+      </Gutter>
     </ScrollView>
   );
 }
@@ -78,28 +99,41 @@ function EventCard({ event, onPress }: { event: EventData; onPress: () => void }
   const startDate = new Date(event.startDate);
   const daysUntil = Math.ceil((startDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   return (
-    <AnimatedCard onPress={onPress}>
+    <Pressable
+      style={styles.card}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${event.name}, ${event.type}, ${startDate.toLocaleDateString()}`}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.eventType}>{event.type}</Text>
-        <Text style={styles.daysBadge}>{daysUntil > 0 ? `${daysUntil} days` : 'Today'}</Text>
+        <View style={styles.daysBadge}>
+          <Text style={styles.daysBadgeText}>{daysUntil > 0 ? `${daysUntil}d to go` : 'Today'}</Text>
+        </View>
       </View>
       <Text style={styles.eventName}>{event.name}</Text>
-      <Text style={styles.eventMeta}>📅 {startDate.toLocaleDateString()}</Text>
-      {event.location && <Text style={styles.eventMeta}>📍 {event.location}</Text>}
-    </AnimatedCard>
+      <Text style={styles.eventMeta}>{startDate.toLocaleDateString()}</Text>
+      {event.location ? <Text style={styles.eventMeta}>{event.location}</Text> : null}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF5F8' },
-  content: { padding: 16, paddingTop: 60, paddingBottom: 48 },
-  emptyState: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 40 },
-  emptyEmoji: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 22, fontWeight: '700', color: '#374151', marginBottom: 8 },
-  emptyText: { fontSize: 15, color: '#9CA3AF', textAlign: 'center', lineHeight: 22 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  eventType: { fontSize: 12, color: '#E91E63', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  daysBadge: { fontSize: 12, color: '#FFFFFF', backgroundColor: '#E91E63', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, overflow: 'hidden' },
-  eventName: { fontSize: 22, fontWeight: '800', color: '#1F2937', marginBottom: 8, letterSpacing: -0.5 },
-  eventMeta: { fontSize: 14, color: '#6B7280', marginTop: 4 },
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingTop: 60 },
+  scrollContent: { paddingBottom: 48 },
+  title: { ...typography.h1, color: colors.text.primary },
+  subtitle: { ...typography.body, color: colors.text.secondary, marginTop: 4, marginBottom: spacing.lg },
+  loadError: { backgroundColor: colors.error, borderRadius: 12, padding: spacing.md, marginBottom: spacing.md },
+  loadErrorText: { color: '#FFFFFF', ...typography.bodySmall, fontWeight: '600' },
+  card: {
+    backgroundColor: colors.surface, borderRadius: borderRadius.lg,
+    padding: spacing.xl, borderWidth: 1, borderColor: colors.borderLight, marginTop: spacing.md,
+  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  eventType: { ...typography.eyebrow, fontSize: 11, color: colors.primary },
+  daysBadge: { backgroundColor: colors.primaryLight, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999 },
+  daysBadgeText: { fontSize: 11, color: colors.primaryDark, fontWeight: '800' },
+  eventName: { ...typography.h3, color: colors.text.primary, marginBottom: 4 },
+  eventMeta: { ...typography.bodySmall, color: colors.text.secondary, marginTop: 2 },
 });

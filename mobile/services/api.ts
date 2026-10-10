@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const TOKEN_KEY = 'familyconnect_tokens';
@@ -8,12 +9,47 @@ export interface Tokens {
   refreshToken: string;
 }
 
+// expo-secure-store has no web implementation (it calls a native module
+// that does not exist in the browser). Use localStorage on web so auth
+// works in Expo Go web without crashing with
+// "deleteValueWithKeyAsync is not a function".
+const isWeb = Platform.OS === 'web';
+
+function storageGet(key: string): string | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function storageSet(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Storage full or unavailable — tokens stay in memory only.
+  }
+}
+
+function storageDelete(key: string): void {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore — nothing to clear.
+  }
+}
+
 export async function saveTokens(tokens: Tokens): Promise<void> {
+  if (isWeb) {
+    storageSet(TOKEN_KEY, JSON.stringify(tokens));
+    return;
+  }
   await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify(tokens));
 }
 
 export async function getTokens(): Promise<Tokens | null> {
-  const raw = await SecureStore.getItemAsync(TOKEN_KEY);
+  const raw = isWeb ? storageGet(TOKEN_KEY) : await SecureStore.getItemAsync(TOKEN_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as Tokens;
@@ -23,6 +59,10 @@ export async function getTokens(): Promise<Tokens | null> {
 }
 
 export async function clearTokens(): Promise<void> {
+  if (isWeb) {
+    storageDelete(TOKEN_KEY);
+    return;
+  }
   await SecureStore.deleteItemAsync(TOKEN_KEY);
 }
 

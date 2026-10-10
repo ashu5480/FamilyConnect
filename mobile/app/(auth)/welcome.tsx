@@ -1,106 +1,106 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Motion, MotionGroup } from '../../components/animations';
-import { AnimatedButton } from '../../components/animations/AnimatedComponents';
+import { Button } from '../../components/ui/Button';
+import { Gutter } from '../../components/ui/states';
+import { BrandLogo } from '../../components/brand/BrandLogo';
+import { colors, typography, spacing, borderRadius, animation } from '../../constants/theme';
+
+const OCCASIONS = ['Weddings', 'Birthdays', 'Anniversaries', 'Pooja', 'Housewarming', 'Baby Showers'];
+const CAPABILITIES = [
+  'Create and manage events',
+  'Schedule multiple functions',
+  'Track tasks and assignments',
+  'Real-time family chat',
+  'Guest management and RSVP',
+  'AI background removal',
+  'Digital invitations',
+  'Shared photo albums',
+];
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Motion preset="fadeInDown" duration={800}>
-        <View style={styles.header}>
-          <Text style={styles.emoji}>👨‍👩‍👧‍👦</Text>
-          <Text style={styles.title}>FamilyConnect</Text>
-          <Text style={styles.tagline}>Plan. Share. Coordinate. Celebrate.</Text>
-          <Text style={styles.description}>
-            Your family's digital home for life's biggest moments.
-          </Text>
-        </View>
-      </Motion>
+    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
+      <Gutter>
+        <Motion preset="fadeInDown" duration={animation.duration.normal}>
+          <View style={styles.hero}>
+            <BrandLogo size="lg" />
+            <Text style={styles.tagline}>Plan. Share. Coordinate. Celebrate.</Text>
+            <Text style={styles.description}>
+              Your family&apos;s digital home for life&apos;s biggest moments.
+            </Text>
+          </View>
+        </Motion>
 
-      <MotionGroup preset="fadeInUp" stagger={80} duration={600} delay={200}>
-        <View style={styles.features}>
-          <FeatureItem icon="💍" text="Weddings" />
-          <FeatureItem icon="🎂" text="Birthdays" />
-          <FeatureItem icon="📅" text="Anniversaries" />
-          <FeatureItem icon="🙏" text="Pooja" />
-          <FeatureItem icon="🏠" text="Housewarming" />
-          <FeatureItem icon="🍼" text="Baby Showers" />
-        </View>
-      </MotionGroup>
+        <MotionGroup preset="fadeInUp" stagger={animation.stagger.fast} duration={animation.duration.fast} delay={150}>
+          <View style={styles.chips}>
+            {OCCASIONS.map(item => (
+              <View key={item} style={styles.chip} accessibilityRole="text" accessibilityLabel={item}>
+                <Text style={styles.chipText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        </MotionGroup>
 
-      <Motion preset="fadeInUp" delay={400} duration={600}>
-        <View style={styles.actions}>
-          <Text style={styles.sectionTitle}>Everything you need for family events</Text>
-          <FeatureList text="Create and manage events" />
-          <FeatureList text="Schedule multiple functions" />
-          <FeatureList text="Track tasks and assignments" />
-          <FeatureList text="Real-time family chat" />
-          <FeatureList text="Guest management and RSVP" />
-          <FeatureList text="AI background removal" />
-          <FeatureList text="Digital invitations" />
-          <FeatureList text="Shared photo albums" />
-        </View>
-      </Motion>
+        <Motion preset="fadeInUp" delay={300} duration={animation.duration.normal}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Everything you need for family events</Text>
+            {CAPABILITIES.map(item => (
+              <View key={item} style={styles.row}>
+                <View style={styles.tick}>
+                  <Text style={styles.tickGlyph}>✓</Text>
+                </View>
+                <Text style={styles.rowText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        </Motion>
 
-      <Motion preset="fadeInUp" delay={600} duration={600}>
-        <View style={styles.footer}>
-          <AnimatedButton
-            title="Get Started"
-            onPress={() => router.push('/(auth)/register')}
-            variant="primary"
-            size="large"
-            animation="spring"
-          />
-
-          <AnimatedButton
-            title="Sign In"
-            onPress={() => router.push('/(auth)/login')}
-            variant="outline"
-            size="large"
-            animation="spring"
-          />
-        </View>
-      </Motion>
+        <Motion preset="fadeInUp" delay={420} duration={animation.duration.normal}>
+          <View style={styles.footer}>
+            <Button
+              title="Get Started"
+              onPress={() => router.push('/(auth)/onboarding')}
+              hint="See a short intro, then create your account"
+            />
+            <Button
+              title="Sign In"
+              variant="outline"
+              onPress={() => router.push('/(auth)/login')}
+              hint="Sign in to your existing account"
+            />
+          </View>
+        </Motion>
+      </Gutter>
     </ScrollView>
   );
 }
 
-function FeatureItem({ icon, text }: { icon: string; text: string }) {
-  return (
-    <View style={styles.featureItem}>
-      <Text style={styles.featureIcon}>{icon}</Text>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
-  );
-}
-
-function FeatureList({ text }: { text: string }) {
-  return (
-    <View style={styles.featureListRow}>
-      <Text style={styles.checkmark}>✓</Text>
-      <Text style={styles.featureListText}>{text}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF5F8' },
-  content: { padding: 24, paddingTop: 80, paddingBottom: 48 },
-  header: { alignItems: 'center', marginBottom: 32 },
-  emoji: { fontSize: 64, marginBottom: 16 },
-  title: { fontSize: 48, fontWeight: '800', color: '#E91E63', marginBottom: 8, letterSpacing: -1 },
-  tagline: { fontSize: 18, color: '#8E8E90', textAlign: 'center', marginBottom: 12 },
-  description: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 24 },
-  features: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40, gap: 12 },
-  featureItem: { alignItems: 'center', width: '30%' },
-  featureIcon: { fontSize: 32, marginBottom: 8 },
-  featureText: { fontSize: 13, color: '#374151', textAlign: 'center' },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#1F2937', marginBottom: 16 },
-  actions: { gap: 12 },
-  featureListRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  checkmark: { color: '#E91E63', marginRight: 8, fontWeight: '700' },
-  featureListText: { fontSize: 15, color: '#374151', flex: 1 },
-  footer: { marginTop: 32, gap: 12 },
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingTop: 72, paddingBottom: 48 },
+  hero: { alignItems: 'flex-start', marginBottom: spacing.xxl },
+  tagline: { ...typography.h3, color: colors.text.primary, marginTop: spacing.lg },
+  description: { ...typography.body, color: colors.text.secondary, marginTop: spacing.sm },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xxl },
+  chip: {
+    paddingHorizontal: spacing.lg, paddingVertical: 10,
+    borderRadius: borderRadius.pill, backgroundColor: colors.primaryLight,
+  },
+  chipText: { ...typography.bodySmall, fontWeight: '600', color: colors.primaryDark },
+  card: {
+    backgroundColor: colors.surface, borderRadius: borderRadius.lg,
+    padding: spacing.xl, borderWidth: 1, borderColor: colors.borderLight, gap: spacing.sm,
+  },
+  cardTitle: { ...typography.h4, color: colors.text.primary, marginBottom: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 5 },
+  tick: {
+    width: 24, height: 24, borderRadius: 12, backgroundColor: colors.primaryLight,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  tickGlyph: { fontSize: 13, fontWeight: '800', color: colors.primary },
+  rowText: { ...typography.bodyMedium, color: colors.text.primary, flex: 1 },
+  footer: { marginTop: spacing.xxl, gap: spacing.md },
 });

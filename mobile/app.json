@@ -18,7 +18,7 @@
     "package": "com.familyconnect.app",
     "adaptiveIcon": {
       "foregroundImage": "./assets/adaptive-icon.png",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#0B1026"
     },
     "permissions": [
       "android.permission.CAMERA",

@@ -1,101 +1,143 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { Motion } from '../../components/animations';
-import { AnimatedButton } from '../../components/animations/AnimatedComponents';
+import { Button } from '../../components/ui/Button';
+import { Field } from '../../components/ui/Field';
+import { Gutter } from '../../components/ui/states';
+import { BrandLogo } from '../../components/brand/BrandLogo';
+import { colors, typography, spacing, animation } from '../../constants/theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  const validate = () => {
+    let ok = true;
+    if (!email.trim()) {
+      setEmailError('Enter your email address.');
+      ok = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError('That email doesn’t look right — check for typos.');
+      ok = false;
+    } else {
+      setEmailError('');
     }
+    if (!password) {
+      setPasswordError('Enter your password.');
+      ok = false;
+    } else {
+      setPasswordError('');
+    }
+    return ok;
+  };
+
+  const handleLogin = async () => {
+    setServerError('');
+    if (!validate()) return;
     setLoading(true);
     try {
-      await login(email, password);
+      // Success navigation only after the server confirms the session.
+      await login(email.trim(), password);
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+      setServerError(error.message || 'Could not sign you in. Try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Motion preset="fadeInDown" duration={600}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your family account</Text>
-      </Motion>
+    <ScrollView style={styles.root} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Gutter>
+        <Motion preset="fadeInDown" duration={animation.duration.fast}>
+          <BrandLogo size="sm" />
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to your family account</Text>
+        </Motion>
 
-      <Motion preset="fadeInUp" delay={100} duration={600}>
-        <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor="#9CA3AF"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-          />
+        <Motion preset="fadeInUp" delay={100} duration={animation.duration.normal}>
+          <View>
+            {serverError ? (
+              <View style={styles.serverError} accessibilityRole="alert">
+                <Text style={styles.serverErrorText}>{serverError}</Text>
+              </View>
+            ) : null}
+            <Field
+              label="Email"
+              value={email}
+              onChangeText={text => { setEmail(text); if (emailError) setEmailError(''); }}
+              error={emailError}
+              placeholder="you@example.com"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              returnKeyType="next"
+            />
+            <Field
+              label="Password"
+              value={password}
+              onChangeText={text => { setPassword(text); if (passwordError) setPasswordError(''); }}
+              error={passwordError}
+              placeholder="Enter your password"
+              secureTextEntry
+              autoComplete="password"
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
+            />
 
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#9CA3AF"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="password"
-          />
-
-          <TouchableOpacity style={styles.forgotLink} onPress={() => router.push('/(auth)/forgot-password')}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
-
-          <AnimatedButton
-            title={loading ? 'Signing In...' : 'Sign In'}
-            onPress={handleLogin}
-            variant="primary"
-            size="large"
-            loading={loading}
-            animation="spring"
-          />
-
-          <View style={styles.signUpRow}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <Text style={styles.signUpLink}>Sign Up</Text>
+            <TouchableOpacity
+              style={styles.forgotLink}
+              onPress={() => router.push('/(auth)/forgot-password')}
+              accessibilityRole="button"
+              accessibilityLabel="Forgot password"
+            >
+              <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
+
+            <Button
+              title="Sign In"
+              onPress={handleLogin}
+              loading={loading}
+              hint="Sign in to your account"
+              style={{ marginTop: spacing.md }}
+            />
+
+            <View style={styles.signUpRow}>
+              <Text style={styles.signUpText}>Don&apos;t have an account? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/register')} accessibilityRole="button" accessibilityLabel="Create an account">
+                <Text style={styles.signUpLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Motion>
+        </Motion>
+      </Gutter>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF5F8' },
-  content: { padding: 24, paddingTop: 80, paddingBottom: 48 },
-  title: { fontSize: 36, fontWeight: '800', color: '#E91E63', marginBottom: 8, letterSpacing: -1 },
-  subtitle: { fontSize: 16, color: '#6B7280', marginBottom: 32 },
-  form: { gap: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: -8 },
-  input: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, padding: 16, fontSize: 16, backgroundColor: '#FFFFFF' },
-  forgotLink: { alignItems: 'flex-end' },
-  forgotText: { color: '#E91E63', fontSize: 14, fontWeight: '600' },
-  signUpRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
-  signUpText: { color: '#6B7280', fontSize: 14 },
-  signUpLink: { color: '#E91E63', fontSize: 14, fontWeight: '700' },
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingTop: 72, paddingBottom: 48 },
+  title: { ...typography.h1, color: colors.text.primary, marginTop: spacing.lg, marginBottom: 4 },
+  subtitle: { ...typography.body, color: colors.text.secondary, marginBottom: spacing.xxl },
+  serverError: {
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  serverErrorText: { color: '#FFFFFF', ...typography.bodySmall, fontWeight: '600' },
+  forgotLink: { alignItems: 'flex-end', paddingVertical: spacing.sm },
+  forgotText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+  signUpRow: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.lg },
+  signUpText: { color: colors.text.secondary, fontSize: 14 },
+  signUpLink: { color: colors.primary, fontSize: 14, fontWeight: '700' },
 });

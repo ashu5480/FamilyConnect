@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { Motion, MotionGroup } from '../../components/animations';
-import { AnimatedCard, AnimatedButton } from '../../components/animations/AnimatedComponents';
+import { Button } from '../../components/ui/Button';
+import { Skeleton, Gutter } from '../../components/ui/states';
+import { colors, typography, spacing, borderRadius, animation } from '../../constants/theme';
 
 export default function ProfileScreen() {
   const { user, family, role, logout, refreshUser } = useAuth();
@@ -14,97 +16,125 @@ export default function ProfileScreen() {
     refreshUser().finally(() => setLoading(false));
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/(auth)/welcome');
+  const handleLogout = () => {
+    Alert.alert('Log out?', 'You’ll need to sign in again on this device.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/(auth)/welcome');
+        },
+      },
+    ]);
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#E91E63" />
+      <View style={styles.root}>
+        <Gutter style={styles.content}>
+          <Skeleton height={100} style={{ width: 100, borderRadius: 50, alignSelf: 'center', marginTop: 60 }} />
+          <Skeleton height={28} style={{ width: '55%', alignSelf: 'center', marginTop: 16 }} />
+          <Skeleton height={140} style={{ marginTop: 24 }} />
+        </Gutter>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Motion preset="fadeInDown" duration={600}>
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.name?.charAt(0).toUpperCase() || '?'}
-            </Text>
+    <ScrollView style={styles.root} contentContainerStyle={styles.scrollContent}>
+      <Gutter style={styles.content}>
+        <Motion preset="fadeInDown" duration={animation.duration.fast}>
+          <View style={styles.header}>
+            <View style={styles.avatar} accessibilityRole="image" accessibilityLabel={user?.name || 'User avatar'}>
+              <Text style={styles.avatarText}>
+                {user?.name?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            </View>
+            <Text style={styles.name}>{user?.name || 'User'}</Text>
+            <Text style={styles.email}>{user?.email || ''}</Text>
+            {user?.relationship ? <Text style={styles.relationship}>{user.relationship}</Text> : null}
+            {role ? (
+              <View style={styles.roleBadge}>
+                <Text style={styles.roleText}>{role}</Text>
+              </View>
+            ) : null}
           </View>
-          <Text style={styles.name}>{user?.name || 'User'}</Text>
-          <Text style={styles.email}>{user?.email || ''}</Text>
-          {user?.relationship && <Text style={styles.relationship}>{user.relationship}</Text>}
-          {role && <Text style={styles.roleBadge}>{role}</Text>}
-        </View>
-      </Motion>
+        </Motion>
 
-      <Motion preset="fadeInUp" delay={100} duration={600}>
-        <AnimatedCard style={styles.familyCard}>
-          <Text style={styles.familyLabel}>Family</Text>
-          <Text style={styles.familyName}>{family?.name || 'No Family'}</Text>
-        </AnimatedCard>
-      </Motion>
+        <Motion preset="fadeInUp" delay={100} duration={animation.duration.normal}>
+          <View style={styles.familyCard}>
+            <Text style={styles.familyLabel}>Family</Text>
+            <Text style={styles.familyName}>{family?.name || 'No Family'}</Text>
+          </View>
+        </Motion>
 
-      <MotionGroup preset="fadeInUp" stagger={60} duration={500} delay={200}>
-        <View style={styles.actions}>
-          <ActionItem icon="👤" label="Edit Profile" onPress={() => router.push('/profile/edit' as any)} />
-          <ActionItem icon="👨‍👩‍👧" label="Family Members" onPress={() => router.push('/family/members' as any)} />
-          <ActionItem icon="⚙️" label="Settings" onPress={() => router.push('/settings' as any)} />
-          <ActionItem icon="🔔" label="Notifications" onPress={() => router.push('/notifications' as any)} />
-          <ActionItem icon="✂️" label="My Cutouts" onPress={() => router.push('/cutouts' as any)} />
-          <ActionItem icon="❓" label="Help & Support" onPress={() => {}} />
-        </View>
-      </MotionGroup>
+        <MotionGroup preset="fadeInUp" stagger={animation.stagger.fast} duration={animation.duration.fast} delay={200}>
+          <View style={styles.actions}>
+            <ActionItem label="Edit Profile" glyph="✎" onPress={() => router.push('/profile/edit' as any)} />
+            <ActionItem label="Family Members" glyph="○" onPress={() => router.push('/family/members' as any)} />
+            <ActionItem label="Settings" glyph="⚙" onPress={() => router.push('/settings' as any)} />
+            <ActionItem label="Notifications" glyph="✉" onPress={() => router.push('/notifications' as any)} />
+            <ActionItem label="My Cutouts" glyph="⬡" onPress={() => router.push('/cutouts' as any)} />
+          </View>
+        </MotionGroup>
 
-      <Motion preset="fadeInUp" delay={500} duration={600}>
-        <AnimatedButton
-          title="Logout"
-          onPress={handleLogout}
-          variant="outline"
-          size="large"
-          animation="spring"
-        />
-      </Motion>
+        <Motion preset="fadeInUp" delay={420} duration={animation.duration.normal}>
+          <Button title="Log Out" onPress={handleLogout} variant="outline" hint="Sign out of this device" />
+        </Motion>
 
-      <Motion preset="fadeIn" delay={600} duration={600}>
         <Text style={styles.version}>FamilyConnect v1.0.0</Text>
-      </Motion>
+      </Gutter>
     </ScrollView>
   );
 }
 
-function ActionItem({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function ActionItem({ label, glyph, onPress }: { label: string; glyph: string; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.7}>
-      <Text style={styles.actionIcon}>{icon}</Text>
+    <Pressable style={styles.actionRow} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+      <View style={styles.actionGlyphBox}>
+        <Text style={styles.actionGlyph}>{glyph}</Text>
+      </View>
       <Text style={styles.actionLabel}>{label}</Text>
       <Text style={styles.actionArrow}>›</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF5F8' },
-  content: { padding: 16, paddingTop: 80, paddingBottom: 48 },
-  profileHeader: { alignItems: 'center', marginBottom: 32 },
-  avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#E91E63', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  avatarText: { color: '#FFFFFF', fontSize: 40, fontWeight: '800' },
-  name: { fontSize: 28, fontWeight: '800', color: '#1F2937', marginBottom: 4 },
-  email: { fontSize: 15, color: '#6B7280', marginBottom: 4 },
-  relationship: { fontSize: 14, color: '#9CA3AF', marginBottom: 8 },
-  roleBadge: { fontSize: 12, color: '#FFFFFF', backgroundColor: '#E91E63', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, overflow: 'hidden', fontWeight: '700' },
-  familyCard: { marginBottom: 24 },
-  familyLabel: { fontSize: 12, color: '#E91E63', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  familyName: { fontSize: 20, fontWeight: '700', color: '#1F2937', marginTop: 4 },
-  actions: { backgroundColor: '#FFFFFF', borderRadius: 16, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, shadowOpacity: 0.08, marginBottom: 24 },
-  actionRow: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  actionIcon: { fontSize: 24, marginRight: 16, width: 32 },
-  actionLabel: { flex: 1, fontSize: 16, color: '#374151', fontWeight: '500' },
-  actionArrow: { fontSize: 24, color: '#D1D5DB' },
-  version: { textAlign: 'center', color: '#9CA3AF', fontSize: 12, marginTop: 16 },
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingTop: 72, paddingBottom: 48 },
+  scrollContent: { paddingBottom: 48 },
+  header: { alignItems: 'center', marginBottom: spacing.xxl },
+  avatar: {
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: colors.primaryDark,
+    justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md,
+  },
+  avatarText: { color: '#FFFFFF', fontSize: 38, fontWeight: '800' },
+  name: { ...typography.h2, color: colors.text.primary, marginBottom: 2, textAlign: 'center' },
+  email: { ...typography.bodySmall, color: colors.text.secondary, marginBottom: 2 },
+  relationship: { ...typography.bodySmall, color: colors.text.tertiary, marginBottom: spacing.sm },
+  roleBadge: { backgroundColor: colors.primaryLight, paddingHorizontal: 14, paddingVertical: 5, borderRadius: 999, marginTop: spacing.sm },
+  roleText: { fontSize: 11, color: colors.primaryDark, fontWeight: '800', letterSpacing: 1 },
+  familyCard: {
+    backgroundColor: colors.surface, borderRadius: 16, padding: spacing.xl,
+    borderWidth: 1, borderColor: colors.borderLight, marginBottom: spacing.xl,
+  },
+  familyLabel: { ...typography.eyebrow, color: colors.primary },
+  familyName: { ...typography.h3, color: colors.text.primary, marginTop: 6 },
+  actions: {
+    backgroundColor: colors.surface, borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1, borderColor: colors.borderLight, marginBottom: spacing.xl,
+  },
+  actionRow: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.borderLight, minHeight: 60 },
+  actionGlyphBox: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primaryLight,
+    alignItems: 'center', justifyContent: 'center', marginRight: spacing.md,
+  },
+  actionGlyph: { fontSize: 16, color: colors.primary, fontWeight: '700' },
+  actionLabel: { flex: 1, fontSize: 16, color: colors.text.primary, fontWeight: '500' },
+  actionArrow: { fontSize: 22, color: colors.text.tertiary },
+  version: { textAlign: 'center', color: colors.text.tertiary, fontSize: 12, marginTop: spacing.lg },
 });

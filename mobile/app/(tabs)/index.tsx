@@ -1,8 +1,20 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { apiRequest } from '../../services/api';
 import { Motion, MotionGroup } from '../../components/animations';
-import { AnimatedCard } from '../../components/animations/AnimatedComponents';
+import { EmptyState, Skeleton, Gutter } from '../../components/ui/states';
+import { useAuth } from '../../hooks/useAuth';
+import { styles } from './homeStyles';
+
+const QUICK_ACTIONS = [
+  { label: 'New Event', glyph: '+', route: '/event/create' },
+  { label: 'Events', glyph: '▦', route: '/(tabs)/events' },
+  { label: 'Tasks', glyph: '✓', route: '/(tabs)/tasks' },
+  { label: 'Chat', glyph: '✉', route: '/(tabs)/chat' },
+  { label: 'Family', glyph: '○', route: '/family/members' },
+  { label: 'Settings', glyph: '⚙', route: '/settings' },
+] as const;
 
 interface FamilyData {
   id: string;
@@ -10,112 +22,164 @@ interface FamilyData {
   slug: string;
 }
 
+interface EventData {
+  id: string;
+  name: string;
+  type: string;
+  startDate: string;
+}
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+// Home shows only real data: family + events from the API.
 export default function HomeScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [family, setFamily] = useState<FamilyData | null>(null);
+  const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
-    loadFamily();
-  }, []);
-
-  const loadFamily = async () => {
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    setLoadError('');
     try {
-      const data = await apiRequest<any>('/families');
-      setFamily(data.families?.[0] || null);
-    } catch (error) {
-      console.error('Failed to load family:', error);
+      const [famRes, evRes] = await Promise.all([
+        apiRequest<any>('/families'),
+        apiRequest<any>('/events'),
+      ]);
+      setFamily(famRes.families?.[0] || null);
+      setEvents(evRes.events?.slice(0, 3) || []);
+    } catch (error: any) {
+      setLoadError(error.message || 'Could not load your home. Pull to retry.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#E91E63" />
+      <View style={styles.root}>
+        <Gutter style={styles.content}>
+          <Skeleton height={22} style={{ width: '45%', marginTop: 60 }} />
+          <Skeleton height={34} style={{ width: '70%', marginTop: 10 }} />
+          <Skeleton height={150} style={{ marginTop: 24 }} />
+          <Skeleton height={20} style={{ width: '40%', marginTop: 28 }} />
+          <View style={styles.actionGrid}>
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <Skeleton key={i} height={86} style={{ width: '31%' }} />
+            ))}
+          </View>
+        </Gutter>
       </View>
     );
   }
 
+  const upNext = events[0];
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Motion preset="fadeInDown" duration={600}>
-        <View style={styles.greeting}>
-          <Text style={styles.greetingText}>Good Morning 👋</Text>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} />}
+    >
+      <Gutter style={styles.content}>
+        <Motion preset="fadeInDown" duration={200}>
+          <Text style={styles.eyebrow}>{greeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Text>
           <Text style={styles.familyName}>{family?.name || 'Your Family'}</Text>
-        </View>
-      </Motion>
+          {loadError ? (
+            <View style={styles.loadError} accessibilityRole="alert">
+              <Text style={styles.loadErrorText}>{loadError}</Text>
+            </View>
+          ) : null}
+        </Motion>
 
-      <Motion preset="fadeInUp" delay={100} duration={600}>
-        <AnimatedCard style={styles.upcomingCard}>
-          <Text style={styles.sectionLabel}>Upcoming Event</Text>
-          <Text style={styles.eventTitle}>No upcoming events</Text>
-          <Text style={styles.eventDate}>Create your first event to get started</Text>
-          <Text style={styles.daysRemaining}>—</Text>
-        </AnimatedCard>
-      </Motion>
+        <Motion preset="fadeInUp" delay={100} duration={320}>
+          <View style={styles.hero}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroEyebrow}>Up next</Text>
+              <Text style={styles.heroTitle}>{upNext?.name || 'No upcoming events'}</Text>
+              <Text style={styles.heroSub}>
+                {upNext ? `${upNext.type} · ${new Date(upNext.startDate).toLocaleDateString()}` : 'Create your first event to get started'}
+              </Text>
+            </View>
+            <Pressable
+              style={styles.heroCta}
+              onPress={() => router.push((upNext ? `/event/${upNext.id}` : '/event/create') as any)}
+              accessibilityRole="button"
+              accessibilityLabel={upNext ? `Open ${upNext.name}` : 'Create your first event'}
+            >
+              <Text style={styles.heroCtaText}>{upNext ? 'Open' : 'Create'}</Text>
+            </Pressable>
+          </View>
+        </Motion>
 
-      <Motion preset="fadeInUp" delay={200} duration={600}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-      </Motion>
+        <Motion preset="fadeInUp" delay={180} duration={320}>
+          <Text style={styles.sectionTitle}>Quick actions</Text>
+        </Motion>
 
-      <MotionGroup preset="fadeInUp" stagger={60} duration={500} delay={250}>
-        <View style={styles.quickActions}>
-          <QuickAction icon="📸" label="Upload Photos" />
-          <QuickAction icon="✂️" label="Remove Background" />
-          <QuickAction icon="✅" label="My Tasks" />
-          <QuickAction icon="👥" label="Guests" />
-          <QuickAction icon="💬" label="Chat" />
-        </View>
-      </MotionGroup>
+        <MotionGroup preset="fadeInUp" stagger={50} duration={200} delay={220}>
+          <View style={styles.actionGrid}>
+            {QUICK_ACTIONS.map(item => (
+              <Pressable
+                key={item.label}
+                style={styles.action}
+                onPress={() => router.push(item.route as any)}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+              >
+                <Text style={styles.actionGlyph}>{item.glyph}</Text>
+                <Text style={styles.actionLabel}>{item.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </MotionGroup>
 
-      <Motion preset="fadeInUp" delay={400} duration={600}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-      </Motion>
-
-      <Motion preset="fadeInUp" delay={450} duration={600}>
-        <AnimatedCard>
-          <Text style={styles.emptyText}>No recent activity yet.</Text>
-        </AnimatedCard>
-      </Motion>
-
-      <Motion preset="fadeInUp" delay={500} duration={600}>
-        <Text style={styles.sectionTitle}>Upcoming Events</Text>
-      </Motion>
-
-      <Motion preset="fadeInUp" delay={550} duration={600}>
-        <AnimatedCard>
-          <Text style={styles.emptyText}>No events created yet.</Text>
-        </AnimatedCard>
-      </Motion>
+        <Motion preset="fadeInUp" delay={380} duration={320}>
+          <Text style={styles.sectionTitle}>Upcoming events</Text>
+          {events.length === 0 ? (
+            <EmptyState
+              title="No events yet"
+              body="Plan your first celebration — a wedding, birthday, or family reunion."
+              actionLabel="Create Event"
+              onAction={() => router.push('/event/create' as any)}
+            />
+          ) : (
+            <View style={styles.eventList}>
+              {events.map(ev => (
+                <Pressable
+                  key={ev.id}
+                  style={styles.eventRow}
+                  onPress={() => router.push(`/event/${ev.id}` as any)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${ev.name}, ${ev.type}`}
+                >
+                  <View style={styles.eventDate}>
+                    <Text style={styles.eventDay}>{new Date(ev.startDate).getDate()}</Text>
+                    <Text style={styles.eventMonth}>{new Date(ev.startDate).toLocaleString('en', { month: 'short' })}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.eventName}>{ev.name}</Text>
+                    <Text style={styles.eventType}>{ev.type}</Text>
+                  </View>
+                  <Text style={styles.chev}>›</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </Motion>
+      </Gutter>
     </ScrollView>
   );
 }
-
-function QuickAction({ icon, label }: { icon: string; label: string }) {
-  return (
-    <TouchableOpacity style={styles.quickActionItem} activeOpacity={0.8}>
-      <Text style={styles.quickActionIcon}>{icon}</Text>
-      <Text style={styles.quickActionLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF5F8' },
-  content: { padding: 16, paddingTop: 60, paddingBottom: 48 },
-  greeting: { marginBottom: 24 },
-  greetingText: { fontSize: 18, color: '#6B7280' },
-  familyName: { fontSize: 28, fontWeight: '800', color: '#1F2937', marginTop: 4 },
-  upcomingCard: { marginBottom: 24 },
-  sectionLabel: { fontSize: 12, color: '#E91E63', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  eventTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
-  eventDate: { fontSize: 15, color: '#6B7280', marginTop: 4 },
-  daysRemaining: { fontSize: 14, color: '#E91E63', fontWeight: '600', marginTop: 8 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937', marginTop: 24, marginBottom: 12 },
-  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-  quickActionItem: { width: '30%', backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16, alignItems: 'center', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowRadius: 4, shadowOpacity: 0.06 },
-  quickActionIcon: { fontSize: 28, marginBottom: 8 },
-  quickActionLabel: { fontSize: 11, color: '#374151', textAlign: 'center', fontWeight: '500' },
-  emptyText: { color: '#9CA3AF', textAlign: 'center', fontSize: 14 },
-});

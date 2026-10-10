@@ -1,22 +1,62 @@
+// FamilyConnect premium design tokens.
+// Palette: midnight navy (depth) + royal blue (connection) +
+// soft off-white (clarity) + restrained warm amber (emotion).
+// All text/background pairs target WCAG AA (>= 4.5:1 for body text).
+
+export const brand = {
+  navy900: '#0B1026',
+  navy800: '#141B3D',
+  navy700: '#1E2754',
+  royal600: '#2B5CFF',
+  royal500: '#3D6BFF',
+  royal100: '#E4E9FF',
+  paper: '#F7F8FC',
+  card: '#FFFFFF',
+  amber500: '#F59E0B',
+  amber100: '#FEF3C7',
+  success: '#0E9F6E',
+  successBg: '#DEF7EC',
+  error: '#E02424',
+  errorBg: '#FCE8E8',
+  ink: '#111831',
+  inkSecondary: '#4B587C',
+  inkTertiary: '#8A94AD',
+  line: '#E3E8F2',
+  lineSoft: '#EFF2F9',
+} as const;
+
 export const colors = {
-  primary: '#E91E63',
-  primaryLight: '#FCE7F3',
-  primaryDark: '#AD1457',
-  secondary: '#7C4DFF',
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
-  background: '#FFF5F8',
-  surface: '#FFFFFF',
+  primary: brand.royal600,
+  primaryLight: brand.royal100,
+  primaryDark: brand.navy800,
+  secondary: brand.navy700,
+  success: brand.success,
+  warning: brand.amber500,
+  error: brand.error,
+  info: brand.royal500,
+  background: brand.paper,
+  surface: brand.card,
   text: {
-    primary: '#1F2937',
-    secondary: '#6B7280',
-    tertiary: '#9CA3AF',
+    primary: brand.ink,
+    secondary: brand.inkSecondary,
+    tertiary: brand.inkTertiary,
     inverse: '#FFFFFF',
   },
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
+  border: brand.line,
+  borderLight: brand.lineSoft,
+};
+
+export const darkColors = {
+  background: brand.navy900,
+  surface: brand.navy800,
+  text: {
+    primary: '#F4F6FF',
+    secondary: '#B9C2DA',
+    tertiary: '#7E89A8',
+    inverse: brand.navy900,
+  },
+  border: '#2A3358',
+  borderLight: '#1E2754',
 };
 
 export const spacing = {
@@ -27,6 +67,8 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
+  gutter: 20,
+  section: 28,
 };
 
 export const borderRadius = {
@@ -34,61 +76,76 @@ export const borderRadius = {
   md: 12,
   lg: 16,
   xl: 20,
-  full: 9999,
+  pill: 999,
 };
 
 export const typography = {
-  h1: { fontSize: 36, fontWeight: '800' as const, letterSpacing: -1 },
-  h2: { fontSize: 28, fontWeight: '800' as const, letterSpacing: -0.5 },
-  h3: { fontSize: 22, fontWeight: '700' as const },
-  h4: { fontSize: 18, fontWeight: '700' as const },
-  body: { fontSize: 16, fontWeight: '400' as const },
-  bodyMedium: { fontSize: 15, fontWeight: '500' as const },
-  bodySmall: { fontSize: 14, fontWeight: '400' as const },
-  caption: { fontSize: 12, fontWeight: '600' as const },
-  label: { fontSize: 14, fontWeight: '600' as const },
+  display: { fontSize: 40, fontWeight: '800' as const, letterSpacing: -1.2, lineHeight: 44 },
+  h1: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.8, lineHeight: 36 },
+  h2: { fontSize: 24, fontWeight: '800' as const, letterSpacing: -0.5, lineHeight: 30 },
+  h3: { fontSize: 20, fontWeight: '700' as const, lineHeight: 26 },
+  h4: { fontSize: 17, fontWeight: '700' as const, lineHeight: 22 },
+  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
+  bodyMedium: { fontSize: 15, fontWeight: '500' as const, lineHeight: 22 },
+  bodySmall: { fontSize: 14, fontWeight: '400' as const, lineHeight: 20 },
+  caption: { fontSize: 12, fontWeight: '600' as const, letterSpacing: 0.6, lineHeight: 16 },
+  label: { fontSize: 14, fontWeight: '600' as const, lineHeight: 20 },
+  eyebrow: { fontSize: 12, fontWeight: '800' as const, letterSpacing: 1.4, lineHeight: 16 },
 };
 
 export const shadows = {
   sm: {
-    shadowColor: '#000',
+    shadowColor: '#0B1026',
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 4,
     shadowOpacity: 0.06,
     elevation: 1,
   },
   md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    shadowOpacity: 0.08,
-    elevation: 2,
+    shadowColor: '#0B1026',
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 16,
+    shadowOpacity: 0.1,
+    elevation: 3,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
-    shadowOpacity: 0.12,
-    elevation: 4,
+    shadowColor: '#0B1026',
+    shadowOffset: { width: 0, height: 12 },
+    shadowRadius: 28,
+    shadowOpacity: 0.16,
+    elevation: 6,
   },
 };
 
 export const animation = {
   duration: {
+    micro: 140,
     fast: 200,
-    normal: 400,
-    slow: 600,
+    normal: 320,
+    slow: 520,
   },
   stagger: {
     fast: 50,
-    normal: 100,
-    slow: 150,
+    normal: 70,
+    slow: 110,
   },
   spring: {
-    damping: 15,
-    stiffness: 150,
-    mass: 1,
+    damping: 18,
+    stiffness: 260,
+    mass: 0.9,
   },
+  pressScale: 0.965,
+};
+
+export const breakpoints = {
+  phone: 0,
+  tablet: 640,
+  desktop: 1024,
+  maxContentWidth: 560,
+};
+
+export const a11y = {
+  minTouchTarget: 44,
 };
 
 export const eventTypes = [
