@@ -10,8 +10,13 @@ const refreshSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  let body: unknown;
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  try {
     const { refreshToken } = refreshSchema.parse(body);
 
     let payload: TokenPayload;
@@ -41,9 +46,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ accessToken, refreshToken: newRefreshToken });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+      const details = (error as unknown as { errors?: unknown; issues?: unknown }).errors
+        ?? (error as unknown as { issues?: unknown }).issues;
+      return NextResponse.json({ error: 'Validation failed', details }, { status: 400 });
     }
-    console.error('Refresh error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Refresh error:', message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

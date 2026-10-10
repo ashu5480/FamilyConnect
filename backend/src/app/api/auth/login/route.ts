@@ -11,8 +11,13 @@ const loginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  let body: unknown;
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  try {
     const { email, password } = loginSchema.parse(body);
 
     await getDb();
@@ -45,9 +50,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+      const details = (error as unknown as { errors?: unknown; issues?: unknown }).errors
+        ?? (error as unknown as { issues?: unknown }).issues;
+      return NextResponse.json({ error: 'Validation failed', details }, { status: 400 });
     }
-    console.error('Login error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Login error:', message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

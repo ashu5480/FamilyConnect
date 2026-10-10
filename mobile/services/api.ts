@@ -41,13 +41,30 @@ async function refreshTokens(): Promise<Tokens | null> {
     return null;
   }
 
-  const data = await response.json();
+  const data = await safeParseJson<Partial<Tokens>>(response);
+  if (!data?.accessToken || !data?.refreshToken) {
+    await clearTokens();
+    return null;
+  }
   const newTokens: Tokens = {
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
   };
   await saveTokens(newTokens);
   return newTokens;
+}
+
+// Read a response body as JSON without throwing on empty, HTML, or
+// otherwise malformed payloads (e.g. a proxy/CDN error page). Returns
+// null when the body is not usable JSON.
+async function safeParseJson<T>(response: Response): Promise<T | null> {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
 }
 
 export async function apiRequest<T>(
@@ -81,11 +98,15 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    const error = await safeParseJson<{ error?: string }>(response);
+    throw new Error(error?.error || `HTTP ${response.status}`);
   }
 
-  return response.json();
+  const data = await safeParseJson<T>(response);
+  if (data === null) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return data;
 }
 
 export function getApiBaseUrl(): string {
