@@ -33,6 +33,19 @@
     "output": "static",
     "favicon": "./assets/favicon.png"
   },
+  "updates": {
+    "url": "https://u.expo.dev/70068b53-ed57-40fc-a496-1b992ad4aad8",
+    "fallbackToCacheTimeout": 0,
+    "checkAutomatically": "ON_LOAD"
+  },
+  "runtimeVersion": {
+    "policy": "appVersion"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "70068b53-ed57-40fc-a496-1b992ad4aad8"
+    }
+  },
   "plugins": [
     "expo-image-picker",
     "expo-secure-store",

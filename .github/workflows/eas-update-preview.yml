@@ -1,0 +1,50 @@
+name: EAS Update (preview)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/eas-update-preview.yml'
+  workflow_dispatch:
+
+jobs:
+  update-preview:
+    runs-on: ubuntu-latest
+    # Keep backend deployment separate: this job only ships compatible
+    # JavaScript OTA updates. Native changes (app.json plugins/permissions,
+    # package.json native deps, eas.json build config) REQUIRE a new APK build.
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Publish OTA update to preview channel
+        run: eas update --channel preview --message "${{ github.sha }} ${{ github.event.head_commit.message }}" --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Production API URL is baked via EAS environment / build profile.
+          # Set EXPO_PUBLIC_API_BASE_URL in the EAS dashboard or eas.json env,
+          # NOT as a GitHub secret printed in logs.
