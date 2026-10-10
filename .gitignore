@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+.expo/
+*.tsbuildinfo
+.eslintcache
+
+# Environment & secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+atlas-credentials.env
+*.pem
+*.key
+*.jks
+*.keystore
+*.p12
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+server.err.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Mobile
+mobile/.expo/
+mobile/ios/
+mobile/android/
+
+# APK build output
+*.apk
+*.aab
+FamilyConnect-*.apk
+verify-apk-report.txt
+
+# Backend
+backend/.next/
+backend/.env
+.vercel/
+
+# Test coverage
+coverage/

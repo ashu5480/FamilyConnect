@@ -1,0 +1,36 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "regions": ["iad1"],
+  "env": {
+    "MONGODB_URI": "@familyconnect-mongodb-uri",
+    "MONGODB_DB_NAME": "@familyconnect-mongodb-db-name",
+    "JWT_SECRET": "@familyconnect-jwt-secret",
+    "JWT_REFRESH_SECRET": "@familyconnect-jwt-refresh-secret",
+    "AI_API_KEY": "@familyconnect-ai-api-key",
+    "BLOB_STORAGE_TOKEN": "@familyconnect-blob-storage-token",
+    "REMOVEBG_API_KEY": "@familyconnect-removebg-api-key"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Authorization, Content-Type" }
+      ]
+    }
+  ]
+}

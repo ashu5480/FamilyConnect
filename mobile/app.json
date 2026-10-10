@@ -1,0 +1,44 @@
+{
+  "name": "familyconnect",
+  "slug": "familyconnect",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "userInterfaceStyle": "light",
+  "scheme": "familyconnect",
+  "newArchEnabled": true,
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.familyconnect.app",
+    "requireVersion": "15.0",
+    "infoPlist": {
+      "NSCameraUsageDescription": "FamilyConnect needs access to your camera to take photos for events.",
+      "NSPhotoLibraryUsageDescription": "FamilyConnect needs access to your photo library to upload event photos.",
+      "NSMicrophoneUsageDescription": "FamilyConnect needs microphone access for voice messages."
+    }
+  },
+  "android": {
+    "package": "com.familyconnect.app",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#FFFFFF"
+    },
+    "permissions": [
+      "CAMERA",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE"
+    ]
+  },
+  "web": {
+    "bundler": "metro",
+    "output": "static",
+    "favicon": "./assets/favicon.png"
+  },
+  "plugins": [
+    "expo-image-picker",
+    "expo-secure-store",
+    "expo-notifications"
+  ],
+  "experiments": {
+    "typedRoutes": true
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "familyconnect",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Your family's digital home for life's biggest moments.",
+  "scripts": {
+    "dev:mobile": "cd mobile && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "build:mobile": "cd mobile && npm run typecheck",
+    "build:backend": "cd backend && npm run build",
+    "typecheck:mobile": "cd mobile && npm run typecheck",
+    "typecheck:backend": "cd backend && npm run typecheck",
+    "seed": "cd backend && npm run seed",
+    "install:all": "cd mobile && npm install && cd ../backend && npm install"
+  },
+  "keywords": [
+    "family",
+    "events",
+    "wedding",
+    "react-native",
+    "expo",
+    "nextjs",
+    "mongodb"
+  ],
+  "author": "FamilyConnect",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
