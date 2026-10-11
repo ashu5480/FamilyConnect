@@ -2,7 +2,16 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const TOKEN_KEY = 'familyconnect_tokens';
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://familyconnect-api.vercel.app/api';
+// Live deployed backend. Override per-environment with EXPO_PUBLIC_API_BASE_URL
+// (Expo inlines EXPO_PUBLIC_* at bundle time). This fallback must point at a
+// LIVE deployment — a stale/removed Vercel host returns a Vercel-edge 404
+// ("DEPLOYMENT_NOT_FOUND") that surfaces to users as a misleading login 404.
+// Trailing slashes are stripped because every endpoint below is appended with a
+// leading "/" (e.g. "/auth/login"), which would otherwise create "//" segments.
+const API_BASE_URL = (
+  (process.env.EXPO_PUBLIC_API_BASE_URL || '').trim() ||
+  'https://family-connect-app-puce.vercel.app/api'
+).replace(/\/+$/, '');
 
 export interface Tokens {
   accessToken: string;
