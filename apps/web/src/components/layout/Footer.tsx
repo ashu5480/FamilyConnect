@@ -12,16 +12,21 @@ export function Footer() {
           </span>
           FamilyConnect — keep your family in sync.
         </p>
-        <div className="flex gap-6">
-          <Link href="/home" className="hover:text-ink-900 transition-colors">
-            Home
-          </Link>
-          <Link href="/family" className="hover:text-ink-900 transition-colors">
-            Family hub
-          </Link>
-          <Link href="/events" className="hover:text-ink-900 transition-colors">
-            Events
-          </Link>
+        <div className="flex flex-col items-center sm:items-end gap-1">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <Link href="/" className="hover:text-ink-900 transition-colors">
+              Home
+            </Link>
+            <Link href="/events" className="hover:text-ink-900 transition-colors">
+              Events
+            </Link>
+            <Link href="/connections" className="hover:text-ink-900 transition-colors">
+              Connections
+            </Link>
+          </div>
+          <p className="text-xs text-ink-400">
+            Created by JIYAI Technology · Founder: Ashutosh Singh
+          </p>
         </div>
       </div>
     </footer>

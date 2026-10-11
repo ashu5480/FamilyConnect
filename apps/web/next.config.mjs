@@ -4,7 +4,7 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      { hostname: 'familyconnect-api.vercel.app' },
+      { hostname: 'family-connect-app-puce.vercel.app' },
     ],
   },
 };

@@ -3,7 +3,10 @@ import { Family, Member, EventItem, Connection } from './types';
 // FamilyConnect is a real product. When the API is available, these functions
 // fetch live data; otherwise they fall back to a small deterministic seed so
 // the premium site can be previewed, tested, and reviewed without a backend.
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://familyconnect-api.vercel.app/api';
+export const API_BASE = (
+  (process.env.NEXT_PUBLIC_API_BASE_URL || '').trim() ||
+  'https://family-connect-app-puce.vercel.app/api'
+).replace(/\/+$/, '');
 
 export async function getFamilies(): Promise<Family[]> {
   try {

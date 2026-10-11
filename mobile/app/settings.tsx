@@ -50,6 +50,11 @@ export default function SettingsScreen() {
             <InfoRow label="Platform" value="Expo / React Native" />
             <View style={styles.divider} />
             <InfoRow label="API" value={getApiBaseUrl()} />
+            <View style={styles.divider} />
+            <View style={styles.attribution}>
+              <Text style={styles.attributionLine}>Created by JIYAI Technology</Text>
+              <Text style={styles.attributionLine}>Founder: Ashutosh Singh</Text>
+            </View>
           </View>
         </Motion>
 
@@ -108,4 +113,6 @@ const styles = StyleSheet.create({
   settingHint: { ...typography.bodySmall, color: colors.text.tertiary, marginTop: 2 },
   infoValue: { fontSize: 13, color: colors.text.secondary, maxWidth: '60%', textAlign: 'right' },
   divider: { height: 1, backgroundColor: colors.borderLight, marginVertical: spacing.md },
+  attribution: { alignItems: 'center', paddingTop: spacing.sm },
+  attributionLine: { ...typography.bodySmall, color: colors.text.tertiary, textAlign: 'center' },
 });

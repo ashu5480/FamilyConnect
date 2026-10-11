@@ -2,8 +2,10 @@
  * Web-safe API client. Uses the same base URL as the mobile app so the web
  * site and the Expo app share one backend.
  */
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://familyconnect-api.vercel.app/api';
+const API_BASE = (
+  (process.env.NEXT_PUBLIC_API_BASE_URL || '').trim() ||
+  'https://family-connect-app-puce.vercel.app/api'
+).replace(/\/+$/, '');
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {

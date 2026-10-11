@@ -1,28 +1,32 @@
 // FamilyConnect premium design tokens.
-// Palette: midnight navy (depth) + royal blue (connection) +
-// soft off-white (clarity) + restrained warm amber (emotion).
+// Palette: light blush pink + soft rose (warmth) + deep plum (depth/contrast)
+// + warm ivory (clarity) + restrained pale lilac (delight).
 // All text/background pairs target WCAG AA (>= 4.5:1 for body text).
+//
+// NOTE: token KEY names (navy*, royal*, amber*) are retained for backward
+// compatibility with existing imports across screens, but their VALUES now
+// express the premium light-pink / plum identity. Do not rename the keys.
 
 export const brand = {
-  navy900: '#0B1026',
-  navy800: '#141B3D',
-  navy700: '#1E2754',
-  royal600: '#2B5CFF',
-  royal500: '#3D6BFF',
-  royal100: '#E4E9FF',
-  paper: '#F7F8FC',
+  navy900: '#3A1030', // deep plum — dark surfaces + contrast
+  navy800: '#4A1740',
+  navy700: '#5C2151',
+  royal600: '#C2185B', // soft rose — primary actions
+  royal500: '#DB2777',
+  royal100: '#FCE7F3', // blush — primary light / tinted fills
+  paper: '#FFF8FB', // warm ivory — app background
   card: '#FFFFFF',
-  amber500: '#F59E0B',
-  amber100: '#FEF3C7',
+  amber500: '#8B5CF6', // pale lilac — secondary accent
+  amber100: '#EDE9FE',
   success: '#0E9F6E',
   successBg: '#DEF7EC',
-  error: '#E02424',
-  errorBg: '#FCE8E8',
-  ink: '#111831',
-  inkSecondary: '#4B587C',
-  inkTertiary: '#8A94AD',
-  line: '#E3E8F2',
-  lineSoft: '#EFF2F9',
+  error: '#E11D48', // rose-red — errors
+  errorBg: '#FCE8EC',
+  ink: '#3A1030', // deep plum — primary text
+  inkSecondary: '#6B4A63',
+  inkTertiary: '#9C8398',
+  line: '#F0DCE6',
+  lineSoft: '#FBEFF4',
 } as const;
 
 export const colors = {
@@ -50,13 +54,13 @@ export const darkColors = {
   background: brand.navy900,
   surface: brand.navy800,
   text: {
-    primary: '#F4F6FF',
-    secondary: '#B9C2DA',
-    tertiary: '#7E89A8',
+    primary: '#FDF2F7',
+    secondary: '#E3C4D6',
+    tertiary: '#B892A8',
     inverse: brand.navy900,
   },
-  border: '#2A3358',
-  borderLight: '#1E2754',
+  border: '#5C2151',
+  borderLight: '#4A1740',
 };
 
 export const spacing = {
@@ -95,21 +99,21 @@ export const typography = {
 
 export const shadows = {
   sm: {
-    shadowColor: '#0B1026',
+    shadowColor: '#3A1030',
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 4,
     shadowOpacity: 0.06,
     elevation: 1,
   },
   md: {
-    shadowColor: '#0B1026',
+    shadowColor: '#3A1030',
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 16,
     shadowOpacity: 0.1,
     elevation: 3,
   },
   lg: {
-    shadowColor: '#0B1026',
+    shadowColor: '#3A1030',
     shadowOffset: { width: 0, height: 12 },
     shadowRadius: 28,
     shadowOpacity: 0.16,
